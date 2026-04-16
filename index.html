@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>二位數乘法：列印優化系統</title>
+    <title>二位數乘法練習系統：分頁獨立換題版</title>
     <style>
         /* A4 列印標準設定 */
         @page {
@@ -16,7 +16,7 @@
             background-color: #f0f2f5;
         }
 
-        /* 導覽列：僅在螢幕顯示，列印時隱藏 */
+        /* 導覽列 */
         .nav-bar {
             background-color: #2c3e50;
             padding: 12px;
@@ -34,8 +34,10 @@
             border-radius: 4px;
             background-color: #34495e;
             color: white;
+            transition: 0.3s;
         }
         .nav-btn.active { background-color: #27ae60; }
+        .refresh-btn { background-color: #3498db; font-weight: bold; }
         .print-btn { background-color: #e67e22; font-weight: bold; }
 
         /* A4 紙張容器 */
@@ -43,13 +45,13 @@
             background: white;
             width: 210mm;
             height: 297mm;
-            padding: 15mm 12mm; /* 設定內邊距，留出安全範圍 */
+            padding: 15mm 12mm;
             margin: 20px auto;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            box-sizing: border-box; /* 極重要：確保 padding 不撐大寬度 */
+            box-sizing: border-box;
             display: none;
             flex-direction: column;
-            overflow: hidden; /* 防止任何內容溢出 */
+            overflow: hidden;
         }
         .page.show { display: flex; }
 
@@ -78,17 +80,17 @@
         }
         .q-num { font-size: 9pt; color: #888; width: 25px; text-align: right; margin-right: 5px; }
 
-        /* 模式二：15題 拆解佈局 (整合優化版) */
+        /* 模式二：15題 拆解佈局 */
         .grid-15 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 欄 */
-            grid-template-rows: repeat(5, 1fr);   /* 5 列 */
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(5, 1fr);
             flex-grow: 1;
-            gap: 8px; /* 縮小間距確保不溢出 */
+            gap: 10px;
         }
         .item-15 {
             border: 1px solid #ddd;
-            padding: 8px 12px;
+            padding: 10px 15px;
             border-radius: 6px;
             display: flex;
             flex-direction: column;
@@ -103,7 +105,7 @@
             border-left: 4px solid #27ae60;
             padding-left: 8px;
         }
-        .step-q { font-size: 13.5pt; color: #444; line-height: 1.6; }
+        .step-q { font-size: 13pt; color: #444; line-height: 1.6; }
         .line { display: inline-block; width: 55px; border-bottom: 1px solid #000; margin: 0 3px; }
         .hint { font-size: 9pt; color: #7f8c8d; }
 
@@ -118,10 +120,10 @@
 <body>
 
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="switchMode('mode1', this)">1. 整十數練習</button>
-        <button class="nav-btn" onclick="switchMode('mode2', this)">2. 拆解法 (個位優先)</button>
+        <button id="btn1" class="nav-btn active" onclick="switchMode('mode1')">1. 整十數練習</button>
+        <button id="btn2" class="nav-btn" onclick="switchMode('mode2')">2. 拆解法 (個位優先)</button>
+        <button class="nav-btn refresh-btn" onclick="refreshCurrentPage()">🔄 僅更換本頁題目</button>
         <button class="nav-btn print-btn" onclick="window.print()">🖨️ 列印此頁面</button>
-        <button class="nav-btn" style="background-color: #7f8c8d;" onclick="location.reload()">🔄 換題</button>
     </div>
 
     <div id="mode1" class="page show">
@@ -144,27 +146,43 @@
     </div>
 
     <script>
-        function switchMode(modeId, btn) {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        let currentMode = 'mode1';
+
+        function switchMode(modeId) {
+            currentMode = modeId;
+            // 更新按鈕樣式
+            document.getElementById('btn1').classList.toggle('active', modeId === 'mode1');
+            document.getElementById('btn2').classList.toggle('active', modeId === 'mode2');
+            
+            // 切換頁面顯示
             document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
             document.getElementById(modeId).classList.add('show');
         }
 
-        function init() {
-            // 第一頁產生 50 題
-            const c1 = document.getElementById('container1');
+        function refreshCurrentPage() {
+            if (currentMode === 'mode1') {
+                generateMode1();
+            } else {
+                generateMode2();
+            }
+        }
+
+        function generateMode1() {
+            const container = document.getElementById('container1');
+            container.innerHTML = ''; // 清空舊題目
             for (let i = 1; i <= 50; i++) {
                 const tens = (Math.floor(Math.random() * 9) + 1) * 10;
                 const m = Math.floor(Math.random() * 8) + 2;
                 const div = document.createElement('div');
                 div.className = 'item-50';
                 div.innerHTML = `<span class="q-num">${i}.</span>${tens}×${m}=__`;
-                c1.appendChild(div);
+                container.appendChild(div);
             }
+        }
 
-            // 第二頁產生 15 題 (順序：個位 -> 十位)
-            const c2 = document.getElementById('container2');
+        function generateMode2() {
+            const container = document.getElementById('container2');
+            container.innerHTML = ''; // 清空舊題目
             for (let i = 1; i <= 15; i++) {
                 const t_val = (Math.floor(Math.random() * 8) + 1) * 10;
                 const o_val = (Math.floor(Math.random() * 8) + 1);
@@ -180,10 +198,13 @@
                         ③ 相加結果： <span class="line"></span>
                     </div>
                 `;
-                c2.appendChild(div);
+                container.appendChild(div);
             }
         }
-        init();
+
+        // 初始載入
+        generateMode1();
+        generateMode2();
     </script>
 </body>
 </html>
